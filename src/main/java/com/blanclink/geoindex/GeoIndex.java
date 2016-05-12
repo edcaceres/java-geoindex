@@ -32,7 +32,7 @@ public class GeoIndex {
         return clone;
     }
 
-    public Object addEntryAt(Point point) {
+    public Object addEntryAt(IPoint point) {
         Cell square = cellOf(point, this.resolution);
 
         if (!this.index.containsKey(square)) {
@@ -44,7 +44,7 @@ public class GeoIndex {
         return this.index.get(square);
     }
 
-    public Object getEntryAt(Point point) {
+    public Object getEntryAt(IPoint point) {
         Cell square = cellOf(point, this.resolution);
 
         return this.index.containsKey(square) ?
@@ -52,7 +52,7 @@ public class GeoIndex {
                 this.newEntry.get();
     }
 
-    public List<Object> range(Point topLeft, Point bottomRight) {
+    public List<Object> range(IPoint topLeft, BasicPoint bottomRight) {
         Cell topLeftIndex = cellOf(topLeft, this.resolution);
         Cell bottomRightIndex = cellOf(bottomRight, this.resolution);
 

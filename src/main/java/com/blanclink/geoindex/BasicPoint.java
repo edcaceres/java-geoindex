@@ -1,12 +1,12 @@
 package com.blanclink.geoindex;
 
-public class Point {
+public class BasicPoint implements IPoint {
 
     private final String id;
     private final Double lat;
     private final Double lon;
 
-    public Point(String id, Double lat, Double lon) {
+    public BasicPoint(String id, Double lat, Double lon) {
         this.id = id;
         this.lat = lat;
         this.lon = lon;
@@ -29,7 +29,7 @@ public class Point {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Point point = (Point) o;
+        BasicPoint point = (BasicPoint) o;
 
         if (!id.equals(point.id)) return false;
         if (!lat.equals(point.lat)) return false;

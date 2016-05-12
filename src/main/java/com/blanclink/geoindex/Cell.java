@@ -15,7 +15,7 @@ public class Cell {
         this.y = y;
     }
 
-    public static Cell cellOf(Point point, double resolution) {
+    public static Cell cellOf(IPoint point, double resolution) {
 
         int x = (int) ((-MIN_LAT + point.getLat()) * LAT_DEGREE_LENGTH / resolution);
         int y = (int) ((-MIN_LON + point.getLon()) * LON_DEGREE_LENGTH / resolution);

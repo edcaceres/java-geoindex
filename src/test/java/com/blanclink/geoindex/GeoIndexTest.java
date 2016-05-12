@@ -17,7 +17,7 @@ public class GeoIndexTest extends BaseTest {
             return new TestEntry(counter, 0);
         });
 
-        for (Point location : locations) {
+        for (BasicPoint location : locations) {
             Object o = index.addEntryAt(location);
             ((TestEntry) o).add();
         }
