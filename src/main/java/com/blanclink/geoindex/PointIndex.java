@@ -6,59 +6,59 @@ import java.util.function.Predicate;
 
 import static java.lang.Math.*;
 
-public class PointIndex {
+public class PointIndex<T extends IPoint> {
 
     private static final double EARTH_RADIUS = 6371000;
-    private final GeoIndex index;
-    private final Map<String, IPoint> currentPosition;
+    private final GeoIndex<Map<String, T>> index;
+    private final Map<String, T> currentPosition;
     private static final Map<Integer, Double> lonDegreeDistance = new HashMap<>();
 
-    private PointIndex(GeoIndex index, Map<String, IPoint> currentPosition) {
+    private PointIndex(GeoIndex<Map<String, T>> index, Map<String, T> currentPosition) {
         this.currentPosition = currentPosition;
         this.index = index;
     }
 
     public PointIndex(double resolution) {
         this.currentPosition = new HashMap<>();
-        this.index = new GeoIndex(resolution, HashMap::new);
+        this.index = new GeoIndex<>(resolution, HashMap::new);
     }
 
     public PointIndex(double resolution, Duration expiration) {
         this.currentPosition = new HashMap<>();
-        this.index = new GeoIndex(resolution, () -> {
-            ExpiringMap<String, IPoint> eMap = new ExpiringMap<>(expiration);
+        this.index = new GeoIndex<>(resolution, () -> {
+            ExpiringMap<String, T> eMap = new ExpiringMap<>(expiration);
             eMap.setOnExpire((s, p) -> currentPosition.remove(p.getId()));
             return eMap;
         });
     }
 
     public PointIndex clone() {
-        PointIndex clone = new PointIndex(this.index, this.currentPosition);
+        PointIndex<T> clone = new PointIndex<>(this.index, this.currentPosition);
         clone.currentPosition.putAll(this.currentPosition);
         return clone;
     }
 
-    public IPoint get(String id) {
+    public T get(String id) {
         if(currentPosition.containsKey(id)) {
-            Map<String, Object> entry = (Map<String, Object>) index.getEntryAt(currentPosition.get(id));
+            Map<String, T> entry = index.getEntryAt(currentPosition.get(id));
             if(entry.containsKey(id)) {
-                return (IPoint) entry.get(id);
+                return entry.get(id);
             }
         }
         return null;
     }
 
-    public Map<String, IPoint> getAll() {
-        HashMap<String, IPoint> newPoints = new HashMap<>();
+    public Map<String, T> getAll() {
+        Map<String, T> newPoints = new HashMap<>();
         for (String key : currentPosition.keySet()) {
             newPoints.put(key, currentPosition.get(key));
         }
         return newPoints;
     }
 
-    public void add(IPoint point) {
+    public void add(T point) {
         remove(point.getId());
-        Map<String, Object> entry = (Map<String, Object>) index.addEntryAt(point);
+        Map<String, T> entry = index.addEntryAt(point);
         entry.put(point.getId(), point);
         currentPosition.put(point.getId(), point);
     }
@@ -66,23 +66,29 @@ public class PointIndex {
     public void remove(String id) {
         if (currentPosition.containsKey(id)) {
             IPoint prevPoint = currentPosition.get(id);
-            Map<String, Object> entry = (Map<String, Object>) index.getEntryAt(prevPoint);
+            Map<String, T> entry = index.getEntryAt(prevPoint);
             entry.remove(prevPoint.getId());
             currentPosition.remove(prevPoint.getId());
         }
     }
 
-    private List<IPoint> getPoints(List<Object> entries, Predicate<IPoint> accept) {
-        List<IPoint> result = new ArrayList<>();
+    private List<T> getPoints(List<Map<String, T>> entries, Predicate<T> accept) {
+        List<T> result = new ArrayList<>();
         result = getPointsAppend(result, entries, accept);
         return result;
     }
 
-    private List<IPoint> getPointsAppend(List<IPoint> s, List<Object> entries, Predicate<IPoint> accept) {
+    private List<T> getPointsAppend(List<T> s, List<Map<String, T>> entries, Predicate<T> accept) {
+
+//        for (Map<String, T> entry: entries) {
+//            for (T point : entry.values()) {
+//                if (accept.test(point)) s.add(point);
+//            }
+//        }
 
         entries.stream()
-                .flatMap(entry -> ((Map<String, Object>) entry).values().stream())
-                .map(o -> (IPoint) o)
+                .flatMap(entry -> entry.values().stream())
+                .map(o -> o)
                 .filter(accept)
                 .forEach(s::add);
 
@@ -123,9 +129,9 @@ public class PointIndex {
         return EARTH_RADIUS * c;
     }
 
-    public List<IPoint> kNearest(IPoint point, int k, double maxDistance, Predicate<IPoint> accept) {
-        Map<String, Object> pointEntry = (Map<String, Object>) index.getEntryAt(point);
-        List<IPoint> nearbyPoints = getPoints(Collections.singletonList(pointEntry), accept);
+    public List<T> kNearest(IPoint point, int k, double maxDistance, Predicate<T> accept) {
+        Map<String, T> pointEntry = index.getEntryAt(point);
+        List<T> nearbyPoints = getPoints(Collections.singletonList(pointEntry), accept);
 
         int totalCount = 0;
         Cell idx = Cell.cellOf(point, index.getResolution());
@@ -159,9 +165,9 @@ public class PointIndex {
         return nearbyPoints.subList(0, k);
     }
 
-    public List<IPoint> range(IPoint topLeft, IPoint bottomRight) {
-        List<Object> entries = index.range(topLeft, bottomRight);
-        Predicate<IPoint> accept = point ->
+    public List<T> range(IPoint topLeft, IPoint bottomRight) {
+        List<Map<String, T>> entries = index.range(topLeft, bottomRight);
+        Predicate<T> accept = point ->
                 between(point.getLat(), bottomRight.getLat(), topLeft.getLat()) &&
                         between(point.getLon(), topLeft.getLon(), bottomRight.getLon());
 

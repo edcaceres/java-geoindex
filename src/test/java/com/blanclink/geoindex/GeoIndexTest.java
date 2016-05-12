@@ -7,12 +7,12 @@ import java.util.List;
 
 public class GeoIndexTest extends BaseTest {
 
-    private static GeoIndex index;
+    private static GeoIndex<TestEntry> index;
     private static int counter = 0;
 
     @Test
     public void testGeoIndex() throws Exception {
-        index = new GeoIndex(100, () -> {
+        index = new GeoIndex<>(100, () -> {
             counter++;
             return new TestEntry(counter, 0);
         });
@@ -22,7 +22,7 @@ public class GeoIndexTest extends BaseTest {
             ((TestEntry) o).add();
         }
 
-        List<Object> entries = index.range(oxford, embankment);
+        List<TestEntry> entries = index.range(oxford, embankment);
 
         int count = 0;
         for (Object entry : entries) {

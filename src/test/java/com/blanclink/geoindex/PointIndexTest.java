@@ -12,30 +12,30 @@ import static org.junit.Assert.assertNotNull;
 
 public class PointIndexTest extends BaseTest {
 
-    private Predicate<IPoint> all = point -> true;
+    private Predicate<BasicPoint> all = point -> true;
 
     @Test
     public void testRange() throws Exception {
-        PointIndex index = new PointIndex(1000);
+        PointIndex<BasicPoint> index = new PointIndex<>(1000);
 
         locations.forEach(index::add);
 
-        List<IPoint> within = index.range(oxford, embankment);
-        List<IPoint> expected = Arrays.asList(picadilly, charring, coventGarden, embankment, leicester, oxford);
+        List<BasicPoint> within = index.range(oxford, embankment);
+        List<BasicPoint> expected = Arrays.asList(picadilly, charring, coventGarden, embankment, leicester, oxford);
 
         assertEquals(sort(expected), sort(within));
     }
 
     @Test
     public void testKNearest() {
-        PointIndex index = new PointIndex(500);
+        PointIndex<BasicPoint> index = new PointIndex<>(500);
 
         locations.forEach(index::add);
 
         assertEquals(Arrays.asList(charring, embankment, leicester), index.kNearest(charring, 3, 1000, all));
         assertEquals(Arrays.asList(charring, embankment, leicester, coventGarden, picadilly), index.kNearest(charring, 5, 20000, all));
 
-        Predicate<IPoint> noPicadilly = point -> !point.getId().contains("Piccadilly");
+        Predicate<BasicPoint> noPicadilly = point -> !point.getId().contains("Piccadilly");
 
         assertEquals(Arrays.asList(charring, embankment, leicester, coventGarden, westminster), index.kNearest(charring, 5, 20000, noPicadilly));
         assertEquals(Arrays.asList(charring, embankment, leicester, coventGarden, picadilly), index.kNearest(charring, 5, 20000, all));
@@ -44,8 +44,7 @@ public class PointIndexTest extends BaseTest {
 
     @Test
     public void testExpiringIndex() throws InterruptedException {
-        PointIndex index = new PointIndex(1000, Duration.ofMillis(5000));
-
+        PointIndex<BasicPoint> index = new PointIndex<>(1000, Duration.ofMillis(5000));
 
         index.add(picadilly);
 
@@ -81,7 +80,7 @@ public class PointIndexTest extends BaseTest {
         assertEquals(sort(index.kNearest(charring, 3, 5000, all)), sort(Arrays.asList(embankment, leicester, coventGarden)));
     }
 
-    private List<IPoint> sort(List<IPoint> pointList) {
+    private List<? extends IPoint> sort(List<? extends IPoint> pointList) {
         pointList.sort((IPoint o1, IPoint o2) -> o1.getId().compareTo(o2.getId()));
         return pointList;
     }
